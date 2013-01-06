@@ -1,10 +1,6 @@
 {
   "local": {
     "gfw": {
-      "rule": {
-        "custom": ["twitter.com", "facebook.com"],
-        "blocked": []
-      },
       "pac": {
         "template": "gfw.tmpl",
         "proxy": "PROXY <%=ip%>:8080"
@@ -28,44 +24,15 @@
     "socks5": {
       "host": "0.0.0.0",
       "port": 7070,
-      "upstream": "shadow://cool@<%=ip%>:1027"
+      "upstream": "<%=remote%>"
     }
   },
   "worker": {
-    "socks5": {
-      "port": 1026,
-      "host": "0.0.0.0",
-      "upstream": "direct://"
-    },
     "shadow": {
       "host": "0.0.0.0",
       "port": 1027,
       "pass": "cool",
       "upstream": "direct://"
     }
-  },
-  "debug": {
-    "http": {
-      "port": 1025,
-      "host": "0.0.0.0",
-      "upstream": "direct://"
-    },
-    "socks5": {
-      "port": 1026,
-      "host": "0.0.0.0",
-      "upstream": "direct://"
-    },
-    "shadow": {
-      "port": 1027,
-      "host": "0.0.0.0",
-      "pass": "cool",
-      "upstream": "direct://"
-    }
-  },
-  "helper": {
-    "auth": {},
-    "account": {},
-    "discovery": {},
-    "domain": {}
   }
 }

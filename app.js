@@ -6,7 +6,7 @@ var debug = require('./debug')('APP')
 // ----
 
 function getLocalIP(callback) {
-  var socket = net.createConnection(80, 'www.google.com');
+  var socket = net.createConnection(80, 'qq.com');
   socket.on('connect', function() {
     callback(undefined, socket.address().address);
     socket.end();
@@ -16,16 +16,14 @@ function getLocalIP(callback) {
   });
 }
 
-function getConfig(localip, callback) {
+function getConfig(localip, remote, callback) {
   try {
-    // init conf by tmpl
+    var i = localip || '127.0.0.1';
+    var r = remote || 'shadow://cool@'+i+':1027';
     var t = fs.readFileSync(path.dirname(__filename)+"/app.tmpl", 'utf8');
-    // debug(t);
-    var s = tmpl(t, {ip:localip});
-    // debug(s);
-    var c = JSON.parse(s);
-    // debug(c);
-    callback(undefined, c);
+    var s = tmpl(t, {ip:i,remote:r});
+    var j = JSON.parse(s);
+    callback(undefined, j);
   } catch(x) {
     callback(x);
   }
@@ -134,11 +132,20 @@ process.on('uncaughtException', function(e){
 });
 */
 
+// command
+// ** first run will build gfw chn-iptable
+// ** if need rebuild, just drop gfw.rule file
+// ** on local
+// node app local shadow://pass@1.2.3.4:5678
+// ** on remote (ip: 1.2.3.4)
+// node app worker
+
 if (!module.parent) {
   var app = process.argv[2];
+  var remote = process.argv[3];
   getLocalIP(function (error, localip) {
     if (error) return console.log('Not Online? error:', error);
-    getConfig(localip, function(error, conf){
+    getConfig(localip, remote, function(error, conf){
       if (error) return console.log('Config fail. error:', error);
       debug('starting %s on %s', app, localip);
       // the config parser

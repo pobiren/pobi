@@ -1,5 +1,6 @@
 var debug = require('./debug')('GFW')
   , app = require('./app')
+  , vm = require('vm')
   , fs = require('fs')
   , path = require('path');
 
@@ -13,45 +14,40 @@ exports.getPac = getPac;
 
 // ---- implements
 
-var rule = null;
 var pac = null;
+var ctx = null;
 
 var keys = [];
 var cache = {};
 
 function start(config){
-  rule = config.rule || {blocked: ['twitter.com', 'facebook.com']};
   var proxy = config.pac.proxy || "DIRECT";
-  pac = app.tmpl(fs.readFileSync(path.dirname(__filename)+'/'+config.pac.template, 'utf8'), {proxy:proxy, rule:rule});
+  pac = app.tmpl(fs.readFileSync(path.dirname(__filename)+'/'+config.pac.template, 'utf8'), {proxy:proxy});
+  ctx = vm.createContext({});
+  vm.runInContext(pac, ctx, 'wpad.dat');
   debug("started");
 }
 
 function stop(){
-  rule = null;
   pac = null;
+  ctx = null;
   keys = [];
   cache = {};
   debug("stoped");
 }
 
 function isGfw(d){
-  if (rule == null || pac == null) throw "NOT_INIT_YET";
+  if (pac == null) throw "NOT_INIT_YET";
+  // use cache to speed up
   var r = cache[d];
   if (r !== undefined) return r;
-  // r === undefined now
-  if (!keys) for (var i in rule) keys.push(i);
-  for(var s=0; s<keys.length && r === undefined; s++){
-    for(var i=0; i<rule[keys[s]].length && r === undefined; i++){
-      if (endsWith(d, rule[keys[s]][i])) r = true;
-    }
-  }
-  if (r === undefined) r = false;
+  r = (ctx.FindProxyForURL('http://'+d, d) != 'DIRECT');
   cache[d] = r;
   return r;
 }
 
 function getPac(){
-  if (rule == null || pac == null) throw "NOT_INIT_YET";
+  if (pac == null) throw "NOT_INIT_YET";
   return pac;
 }
 
